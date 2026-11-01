@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { getAuthRedirectUrl } from "@/lib/auth-redirect";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
 
@@ -54,7 +55,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           password,
           options: {
             data: { display_name: displayName.trim() },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+            emailRedirectTo: getAuthRedirectUrl(
+              "/auth/callback?next=/dashboard",
+              window.location.origin,
+            ),
           },
         });
         if (authError) throw authError;
@@ -74,7 +78,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         router.refresh();
       } else if (mode === "forgot") {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+          redirectTo: getAuthRedirectUrl(
+            "/auth/callback?next=/reset-password",
+            window.location.origin,
+          ),
         });
         if (authError) throw authError;
         setMessage("If an account exists for that email, a password reset link is on its way.");
@@ -166,6 +173,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             <Link href="/login"><ArrowLeft aria-hidden="true" size={14} /> Back to login</Link>
           )}
         </div>
+        {mode === "login" && (
+          <div className="auth-demo-link">
+            <span>Just exploring?</span>
+            <Link href="/demo">Explore the read-only demo <ArrowRight aria-hidden="true" size={14} /></Link>
+          </div>
+        )}
       </section>
       <p className="auth-footnote">Your celebrations are personal. Your plans stay private.</p>
     </main>

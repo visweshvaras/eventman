@@ -34,7 +34,7 @@ The application does not fabricate seed events, expenses, vendor quotes, or gues
    cp .env.example .env.local
    ```
 
-3. Configure the Supabase project URL and publishable/anon key in `.env.local`. These two Supabase client values are public identifiers; database access is protected by RLS. Keep the NVIDIA NIM API key server-only and do not use a `NEXT_PUBLIC_` prefix.
+3. Configure the Supabase project URL and publishable/anon key in `.env.local`. These two Supabase client values are public identifiers; database access is protected by RLS. Set `NEXT_PUBLIC_SITE_URL=http://localhost:3000` for local auth links. Keep the NVIDIA NIM API key server-only and do not use a `NEXT_PUBLIC_` prefix.
 
 4. Apply `supabase/migrations/202611010001_eventgenie_core.sql` to the Supabase project using the Supabase SQL Editor or Supabase CLI:
 
@@ -44,7 +44,7 @@ The application does not fabricate seed events, expenses, vendor quotes, or gues
 
    The migration creates the application tables, indexes, membership policies, atomic event-and-budget creation, timestamp triggers, and assistant rate-limit function. Do not expose a Supabase service-role key to the application.
 
-5. In Supabase Auth settings, set the local site URL to `http://localhost:3000` and allow `http://localhost:3000/auth/callback` for email verification and password-reset redirects. Enable email confirmation if you want verified accounts.
+5. In Supabase **Authentication → URL Configuration**, set the local Site URL to `http://localhost:3000` and allow `http://localhost:3000/auth/callback` for local email verification and password-reset redirects. Enable email confirmation if you want verified accounts.
 
 6. To use the assistant, set `NVIDIA_NIM_API_KEY` and `NVIDIA_NIM_MODEL` in `.env.local`. The key from the original project request was posted in chat; revoke it and use a newly rotated key. Never commit `.env.local`. Verify the rotated key and model with:
 
@@ -62,6 +62,8 @@ This sends a minimal test prompt to NVIDIA NIM and reports success or the HTTP s
 
    Open [http://localhost:3000](http://localhost:3000).
 
+   From the login page, choose **Explore the read-only demo** to view fictional sample data without creating an account. Demo changes are disabled and are never saved; authenticated API routes remain protected.
+
    Or use the single local startup script:
 
    ```bash
@@ -76,6 +78,7 @@ This sends a minimal test prompt to NVIDIA NIM and reports success or the HTTP s
 npm run lint
 npx tsc --noEmit
 npm run build
+npm test
 ```
 
 The API rejects invalid request bodies, derives the user from a verified Supabase session, and relies on RLS for event-level authorization. The assistant uses a fixed NVIDIA NIM endpoint; user input cannot select a model endpoint, invoke SQL, or run arbitrary code. If NIM credentials are missing or a provider call fails, the assistant returns an explicit error and does not report success.
@@ -86,8 +89,8 @@ The app requires a Node.js web service because it uses Next.js server-rendered p
 
 1. Push this project to a GitHub or GitLab repository.
 2. In the Render Dashboard, create a **Blueprint** and connect that repository. Render reads `render.yaml` and creates the `eventgenie` web service.
-3. Enter `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NVIDIA_NIM_API_KEY`, and `NVIDIA_NIM_MODEL` when prompted. Use a rotated NVIDIA key; the key originally shared in chat should be revoked. Render stores `sync: false` values as service environment variables; never commit secrets.
-4. Apply the database migration to the production Supabase project and set the Supabase Auth Site URL to `https://eventgenie-fytk.onrender.com`. Add `https://eventgenie-fytk.onrender.com/auth/callback` to the redirect allowlist.
+3. Enter `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NVIDIA_NIM_API_KEY`, and `NVIDIA_NIM_MODEL` when prompted. `render.yaml` sets `NEXT_PUBLIC_SITE_URL` to the production URL; keep it aligned with the actual Render service URL. Use a rotated NVIDIA key; the key originally shared in chat should be revoked. Render stores `sync: false` values as service environment variables; never commit secrets.
+4. Apply the database migration to the production Supabase project. In Supabase **Authentication → URL Configuration**, set the Site URL to `https://eventgenie-fytk.onrender.com` and add `https://eventgenie-fytk.onrender.com/auth/callback` to the redirect allowlist. Keep `http://localhost:3000/auth/callback` as a separate allowlist entry only if local testing is needed. Request a fresh verification email after changing these URLs; links already sent retain their original redirect destination.
 
 The free Render service may spin down after inactivity, so its first request after idle can be slow. Configure the environment variables and Supabase project before expecting sign-in, saved data, or assistant calls to work.
 

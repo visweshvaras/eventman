@@ -19,14 +19,9 @@ import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { CreateEventInput, EventRecord } from "@/lib/event-schema";
+import { demoDashboardEvents, type DashboardEvent } from "@/lib/demo-data";
 import { AssistantWidget } from "@/components/assistant-widget";
 import { calculateBudgetSummary, sumMoneyAmounts } from "@/lib/budget";
-
-interface DashboardEvent extends EventRecord {
-  budgets: { total_amount: number; currency: string }[];
-  tasks: { id: string; title: string; status: string; due_date: string | null }[];
-  expenses: { amount: number }[];
-}
 
 const eventTypes = [
   "Wedding",
@@ -77,10 +72,12 @@ function formatEventDate(date: string) {
   }).format(new Date(`${date}T00:00:00`));
 }
 
-export function Dashboard() {
+export function Dashboard({ isDemo = false }: { isDemo?: boolean }) {
   const router = useRouter();
-  const [events, setEvents] = useState<DashboardEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [events, setEvents] = useState<DashboardEvent[]>(() =>
+    isDemo ? [...demoDashboardEvents] : [],
+  );
+  const [isLoading, setIsLoading] = useState(!isDemo);
   const [error, setError] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -89,6 +86,8 @@ export function Dashboard() {
   const modalRef = useRef<HTMLElement>(null);
 
   const loadEvents = useCallback(async () => {
+    if (isDemo) return;
+
     try {
       const response = await fetch("/api/events", { cache: "no-store" });
       const payload = (await response.json()) as {
@@ -111,9 +110,11 @@ export function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => {
+    if (isDemo) return;
+
     void Promise.resolve().then(loadEvents);
     try {
       const supabase = createSupabaseBrowserClient();
@@ -130,7 +131,7 @@ export function Dashboard() {
     } catch {
       // The events API reports missing service configuration in its response.
     }
-  }, [loadEvents]);
+  }, [isDemo, loadEvents]);
 
   useEffect(() => {
     if (!isCreateOpen) return;
@@ -204,6 +205,7 @@ export function Dashboard() {
 
   async function createEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isDemo) return;
     setError("");
     setIsSaving(true);
 
@@ -226,6 +228,8 @@ export function Dashboard() {
   }
 
   async function signOut() {
+    if (isDemo) return;
+
     try {
       const supabase = createSupabaseBrowserClient();
       const { error: signOutError } = await supabase.auth.signOut();
@@ -271,11 +275,19 @@ export function Dashboard() {
             <span className="help-icon"><CircleHelp size={17} /></span>
             <div><strong>Need a hand?</strong><span>Your plans, your pace.</span></div>
           </div>
-          <button className="profile-button" onClick={signOut} type="button">
-            <span className="profile-avatar">{userName.slice(0, 1).toUpperCase()}</span>
-            <span className="profile-copy"><strong>{userName}</strong><small>Sign out</small></span>
-            <ChevronDown aria-hidden="true" size={15} />
-          </button>
+          {isDemo ? (
+            <Link className="profile-button" href="/login">
+              <span className="profile-avatar">D</span>
+              <span className="profile-copy"><strong>Demo visitor</strong><small>Sign in</small></span>
+              <ChevronDown aria-hidden="true" size={15} />
+            </Link>
+          ) : (
+            <button className="profile-button" onClick={signOut} type="button">
+              <span className="profile-avatar">{userName.slice(0, 1).toUpperCase()}</span>
+              <span className="profile-copy"><strong>{userName}</strong><small>Sign out</small></span>
+              <ChevronDown aria-hidden="true" size={15} />
+            </button>
+          )}
         </div>
       </aside>
 
@@ -291,15 +303,30 @@ export function Dashboard() {
         </header>
 
         <section className="dashboard-content">
+          {isDemo && (
+            <aside className="demo-banner" aria-label="Demo mode">
+              <div>
+                <strong>Read-only demo</strong>
+                <p>This sample data is fictional. Changes are not saved and your account data is not connected.</p>
+              </div>
+              <Link className="button button-outline" href="/signup">Create your account</Link>
+            </aside>
+          )}
           <div className="dashboard-heading">
             <div>
               <div className="dashboard-eyebrow"><span /> YOUR PLANNING SPACE</div>
               <h1>Good things are <em>in the making,</em> {userName}.</h1>
               <p>Here&apos;s where your ideas start turning into a day to remember.</p>
             </div>
-            <button className="button button-primary create-event-button" onClick={() => setIsCreateOpen(true)} type="button">
-              <Plus aria-hidden="true" size={17} /> Create an event
-            </button>
+            {isDemo ? (
+              <Link className="button button-primary create-event-button" href="/signup">
+                <Plus aria-hidden="true" size={17} /> Create an event
+              </Link>
+            ) : (
+              <button className="button button-primary create-event-button" onClick={() => setIsCreateOpen(true)} type="button">
+                <Plus aria-hidden="true" size={17} /> Create an event
+              </button>
+            )}
           </div>
 
           {error && (
@@ -344,9 +371,13 @@ export function Dashboard() {
                   <span className="panel-kicker">THE BIG MOMENTS</span>
                   <h2>Your events</h2>
                 </div>
-                <button className="text-button" onClick={() => setIsCreateOpen(true)} type="button">
-                  New event <Plus size={15} />
-                </button>
+                {isDemo ? (
+                  <Link className="text-button" href="/signup">Create yours <Plus size={15} /></Link>
+                ) : (
+                  <button className="text-button" onClick={() => setIsCreateOpen(true)} type="button">
+                    New event <Plus size={15} />
+                  </button>
+                )}
               </div>
               {isLoading ? (
                 <div className="empty-events"><span className="loading-dot" /> Loading your plans...</div>
@@ -355,9 +386,15 @@ export function Dashboard() {
                   <span className="empty-icon"><Sparkles size={21} /></span>
                   <h3>Your next big moment starts here.</h3>
                   <p>Add the event you&apos;re dreaming about. You can fill in the details as you go.</p>
-                  <button className="button button-outline" onClick={() => setIsCreateOpen(true)} type="button">
-                    Create your first event <ArrowRight size={15} />
-                  </button>
+                  {isDemo ? (
+                    <Link className="button button-outline" href="/signup">
+                      Create your first event <ArrowRight size={15} />
+                    </Link>
+                  ) : (
+                    <button className="button button-outline" onClick={() => setIsCreateOpen(true)} type="button">
+                      Create your first event <ArrowRight size={15} />
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="event-list">
@@ -367,8 +404,8 @@ export function Dashboard() {
                     const completion = event.tasks.length
                       ? Math.round((event.tasks.filter((task) => task.status === "completed").length / event.tasks.length) * 100)
                       : 0;
-                    return (
-                      <Link className="event-card" href={`/events/${event.id}`} key={event.id}>
+                    const cardContents = (
+                      <>
                         <span className="event-type-icon"><Sparkles size={18} /></span>
                         <span className="event-card-main">
                           <span className="event-card-title">{event.name}</span>
@@ -382,8 +419,19 @@ export function Dashboard() {
                           <strong>{formatCurrency(budget, event.currency)}</strong>
                           <small>{formatCurrency(spent, event.currency)} recorded</small>
                         </span>
-                        <ArrowRight className="event-card-arrow" size={17} />
-                      </Link>
+                      </>
+                    );
+                    return (
+                      isDemo ? (
+                        <article className="event-card demo-event-card" key={event.id}>
+                          {cardContents}
+                        </article>
+                      ) : (
+                        <Link className="event-card" href={`/events/${event.id}`} key={event.id}>
+                          {cardContents}
+                          <ArrowRight className="event-card-arrow" size={17} />
+                        </Link>
+                      )
                     );
                   })}
                 </div>
@@ -577,7 +625,7 @@ export function Dashboard() {
           </section>
         </div>
       )}
-      <AssistantWidget onActionComplete={() => void loadEvents()} />
+      {!isDemo && <AssistantWidget onActionComplete={() => void loadEvents()} />}
     </div>
   );
 }
