@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { calculateBudgetSummary } from "@/lib/budget";
 import { createEventSchema, updateEventSchema } from "@/lib/event-schema";
+import { getNimErrorMessage } from "@/lib/nim-error";
 import { isSupabaseConfigured, requireUser } from "@/lib/supabase/server";
 
 const requestSchema = z.object({
@@ -450,11 +451,7 @@ export async function POST(request: Request) {
       if (!nimResponse.ok) {
         console.error("NVIDIA NIM request failed:", providerPayload.error?.message ?? nimResponse.statusText);
         return Response.json(
-          {
-            error: hasExecutedMutation
-              ? "The assistant could not finish its reply. A change may already have been saved; refresh your event before retrying."
-              : "The assistant could not complete that request. Please try again.",
-          },
+          { error: getNimErrorMessage(nimResponse.status, hasExecutedMutation) },
           { status: 502 },
         );
       }

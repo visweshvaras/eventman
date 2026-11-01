@@ -122,7 +122,7 @@ export function AssistantWidget({
               <Minimize2 size={16} />
             </button>
           </header>
-          <div className="assistant-messages" ref={historyRef} aria-live="polite">
+          <div className="assistant-messages" ref={historyRef} aria-live="polite" aria-busy={isSending}>
             {messages.map((chatMessage, index) => (
               <div className={`chat-row chat-${chatMessage.role}`} key={`${chatMessage.role}-${index}`}>
                 {chatMessage.role === "assistant" && (
@@ -134,7 +134,10 @@ export function AssistantWidget({
             {isSending && (
               <div className="chat-row chat-assistant">
                 <span className="chat-avatar"><Sparkles size={13} /></span>
-                <p className="typing-indicator" aria-label="Assistant is thinking"><i /><i /><i /></p>
+                <p className="typing-indicator" role="status">
+                  <span className="sr-only">Assistant is thinking</span>
+                  <i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" />
+                </p>
               </div>
             )}
             {messages.length === 1 && (

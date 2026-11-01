@@ -22,6 +22,7 @@ import type { CreateEventInput, EventRecord } from "@/lib/event-schema";
 import { demoDashboardEvents, type DashboardEvent } from "@/lib/demo-data";
 import { AssistantWidget } from "@/components/assistant-widget";
 import { calculateBudgetSummary, sumMoneyAmounts } from "@/lib/budget";
+import { formatCurrency } from "@/lib/format-currency";
 
 const eventTypes = [
   "Wedding",
@@ -50,18 +51,6 @@ const initialForm: CreateEventInput = {
   theme: "",
   preferences: "",
 };
-
-function formatCurrency(value: number, currency: string) {
-  try {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return `${currency} ${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value)}`;
-  }
-}
 
 function formatEventDate(date: string) {
   return new Intl.DateTimeFormat("en-IN", {

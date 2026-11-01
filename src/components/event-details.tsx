@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { AssistantWidget } from "@/components/assistant-widget";
 import type { EventRecord } from "@/lib/event-schema";
 import { calculateBudgetSummary } from "@/lib/budget";
+import { formatCurrency } from "@/lib/format-currency";
 
 interface EventTask {
   id: string;
@@ -65,18 +66,6 @@ const emptyEvent: EventDetailsRecord = {
   vendors: [],
   guests: [],
 };
-
-function formatCurrency(value: number, currency: string) {
-  try {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return `${currency} ${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value)}`;
-  }
-}
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-IN", {
