@@ -52,7 +52,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         const { data, error: authError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { display_name: displayName.trim() } },
+          options: {
+            data: { display_name: displayName.trim() },
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          },
         });
         if (authError) throw authError;
         if (data.session) {
@@ -71,7 +74,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         router.refresh();
       } else if (mode === "forgot") {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
         });
         if (authError) throw authError;
         setMessage("If an account exists for that email, a password reset link is on its way.");

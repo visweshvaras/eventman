@@ -44,7 +44,7 @@ The application does not fabricate seed events, expenses, vendor quotes, or gues
 
    The migration creates the application tables, indexes, membership policies, atomic event-and-budget creation, timestamp triggers, and assistant rate-limit function. Do not expose a Supabase service-role key to the application.
 
-5. In Supabase Auth settings, set the local site URL to `http://localhost:3000` and allow the same URL for email verification and password-reset redirects. Enable email confirmation if you want verified accounts.
+5. In Supabase Auth settings, set the local site URL to `http://localhost:3000` and allow `http://localhost:3000/auth/callback` for email verification and password-reset redirects. Enable email confirmation if you want verified accounts.
 
 6. To use the assistant, set `NVIDIA_NIM_API_KEY` and `NVIDIA_NIM_MODEL` in `.env.local`. The key from the original project request was posted in chat; revoke it and use a newly rotated key. Never commit `.env.local`. Verify the rotated key and model with:
 
@@ -87,7 +87,7 @@ The app requires a Node.js web service because it uses Next.js server-rendered p
 1. Push this project to a GitHub or GitLab repository.
 2. In the Render Dashboard, create a **Blueprint** and connect that repository. Render reads `render.yaml` and creates the `eventgenie` web service.
 3. Enter `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NVIDIA_NIM_API_KEY`, and `NVIDIA_NIM_MODEL` when prompted. Use a rotated NVIDIA key; the key originally shared in chat should be revoked. Render stores `sync: false` values as service environment variables; never commit secrets.
-4. Apply the database migration to the production Supabase project and add the Render URL to the Supabase Auth site URL and redirect allowlist.
+4. Apply the database migration to the production Supabase project and set the Supabase Auth Site URL to `https://eventgenie-fytk.onrender.com`. Add `https://eventgenie-fytk.onrender.com/auth/callback` to the redirect allowlist.
 
 The free Render service may spin down after inactivity, so its first request after idle can be slow. Configure the environment variables and Supabase project before expecting sign-in, saved data, or assistant calls to work.
 
