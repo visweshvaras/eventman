@@ -314,7 +314,7 @@ async function executeTool(
 
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
-    return Response.json({ error: "Supabase is not configured. Add the required variables to .env.local." }, { status: 503 });
+    return Response.json({ error: "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in the hosting service's environment settings." }, { status: 503 });
   }
   const { supabase, user } = await requireUser();
   if (!user) {

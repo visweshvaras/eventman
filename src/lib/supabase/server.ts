@@ -15,7 +15,9 @@ export async function createSupabaseServerClient() {
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !publishableKey) {
-    throw new Error("Supabase is not configured. Add the required variables to .env.local.");
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in the hosting service's environment settings.",
+    );
   }
 
   const cookieStore = await cookies();

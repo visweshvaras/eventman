@@ -91,6 +91,8 @@ The app requires a Node.js web service because it uses Next.js server-rendered p
 
 The free Render service may spin down after inactivity, so its first request after idle can be slow. Configure the environment variables and Supabase project before expecting sign-in, saved data, or assistant calls to work.
 
+For an existing Render service, open **Dashboard → eventgenie → Environment**, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from the Supabase project's API settings, and save. Render will rebuild/redeploy the service. These values must be present during the Next.js build because `NEXT_PUBLIC_` variables are included in the browser bundle. Do not set or expose the Supabase service-role key.
+
 ## Project layout
 
 ```text
